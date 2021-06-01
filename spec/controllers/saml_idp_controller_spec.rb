@@ -654,7 +654,12 @@ describe SamlIdpController do
       end
 
       it 'defaults to email when added to issuers_with_email_nameid_format' do
-        auth_settings = missing_nameid_format_saml_settings_for_allowed_email_issuer
+        auth_settings = saml_settings(
+          overrides: {
+            issuer: 'https://rp1.serviceprovider.com/auth/saml/metadata',
+            name_identifier_format: nil,
+          },
+        )
         IdentityLinker.new(user, auth_settings.issuer).link_identity
         user.identities.last.update!(verified_attributes: ['email'])
         generate_saml_response(user, auth_settings)

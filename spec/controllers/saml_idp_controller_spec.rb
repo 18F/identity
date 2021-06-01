@@ -583,7 +583,13 @@ describe SamlIdpController do
       let(:user) { create(:user, :signed_up) }
 
       before do
-        generate_saml_response(user, email_nameid_saml_settings_for_allowed_issuer)
+        settings = saml_settings(
+          overrides: {
+            issuer: 'https://rp1.serviceprovider.com/auth/saml/metadata',
+            name_identifier_format: Saml::Idp::Constants::NAME_ID_FORMAT_EMAIL,
+          },
+        )
+        generate_saml_response(user, settings)
       end
 
       # Testing the <saml:Subject> element when the SP is configured to use a

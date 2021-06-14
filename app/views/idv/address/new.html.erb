@@ -1,12 +1,10 @@
-<% if IdentityConfig.store.ial2_step_indicator_enabled %>
-  <% content_for(:pre_flash_content) do %>
-    <%= render 'shared/step_indicator', {
-      steps: Idv::Flows::DocAuthFlow::STEP_INDICATOR_STEPS,
-      current_step: :verify_info,
-      locale_scope: 'idv',
-      class: 'margin-x-neg-2 margin-top-neg-4 tablet:margin-x-neg-6 tablet:margin-top-neg-4',
-    } %>
-  <% end %>
+<% content_for(:pre_flash_content) do %>
+  <%= render 'shared/step_indicator', {
+    steps: Idv::Flows::DocAuthFlow::STEP_INDICATOR_STEPS,
+    current_step: :verify_info,
+    locale_scope: 'idv',
+    class: 'margin-x-neg-2 margin-top-neg-4 tablet:margin-x-neg-6 tablet:margin-top-neg-4',
+  } %>
 <% end %>
 
 <% title t('titles.doc_auth.verify') %>
@@ -17,7 +15,7 @@
 
 <div class="margin-top-4 margin-bottom-4">
   <%= validated_form_for(:idv_form, url: idv_address_path, method: 'POST',
-                         html: {autocomplete: 'off', role: 'form', class: 'margin-top-2'}) do |f| %>
+                         html: {autocomplete: 'off', class: 'margin-top-2'}) do |f| %>
 
     <%= f.input :address1, label: t('idv.form.address1'), wrapper_html: {class: 'margin-bottom-1'},
                 required: true, maxlength: 255, input_html: { aria: { invalid: false }, value: @pii['address1'] } %>

@@ -4,15 +4,13 @@ feature 'doc auth verify step' do
   include IdvStepHelper
   include DocAuthHelper
 
-  let(:ial2_step_indicator_enabled) { true }
   let(:skip_step_completion) { false }
   let(:max_attempts) { idv_max_attempts }
   let(:fake_analytics) { FakeAnalytics.new }
+  let(:user) { create(:user, :signed_up) }
   before do
-    allow(IdentityConfig.store).to receive(:ial2_step_indicator_enabled).
-      and_return(ial2_step_indicator_enabled)
     unless skip_step_completion
-      sign_in_and_2fa_user
+      sign_in_and_2fa_user(user)
       complete_doc_auth_steps_before_verify_step
     end
   end
@@ -41,6 +39,7 @@ feature 'doc auth verify step' do
     user = User.first
     expect(user.proofing_component.resolution_check).to eq('lexis_nexis')
     expect(user.proofing_component.source_check).to eq('aamva')
+    expect(DocAuthLog.find_by(user_id: user.id).aamva).to eq(true)
   end
 
   it 'proceeds to address page prepopulated with defaults if the user clicks change address' do
@@ -144,21 +143,11 @@ feature 'doc auth verify step' do
     )
   end
 
-  context 'ial2 step indicator enabled' do
-    it 'shows the step indicator' do
-      expect(page).to have_css(
-        '.step-indicator__step--current',
-        text: t('step_indicator.flows.idv.verify_info'),
-      )
-    end
-  end
-
-  context 'ial2 step indicator disabled' do
-    let(:ial2_step_indicator_enabled) { false }
-
-    it 'does not show the step indicator' do
-      expect(page).not_to have_css('.step-indicator')
-    end
+  it 'shows the step indicator' do
+    expect(page).to have_css(
+      '.step-indicator__step--current',
+      text: t('step_indicator.flows.idv.verify_info'),
+    )
   end
 
   context 'when the user lives in an AAMVA supported state' do
@@ -216,6 +205,7 @@ feature 'doc auth verify step' do
         document_expired: nil,
         trace_id: anything,
       )
+      expect(DocAuthLog.find_by(user_id: user.id).aamva).to be_nil
     end
   end
 

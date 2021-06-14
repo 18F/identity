@@ -5,13 +5,10 @@ feature 'doc auth link sent step' do
   include DocAuthHelper
   include DocCaptureHelper
 
-  let(:ial2_step_indicator_enabled) { true }
   let(:user) { sign_in_and_2fa_user }
   let(:doc_capture_polling_enabled) { false }
 
   before do
-    allow(IdentityConfig.store).to receive(:ial2_step_indicator_enabled).
-      and_return(ial2_step_indicator_enabled)
     allow(FeatureManagement).to receive(:doc_capture_polling_enabled?).
       and_return(doc_capture_polling_enabled)
     user
@@ -46,21 +43,36 @@ feature 'doc auth link sent step' do
     expect(page).to have_current_path(idv_doc_auth_link_sent_step)
   end
 
+  it 'does not proceed to the next page if the capture flow is unsuccessful' do
+    mock_doc_captured(user.id, IdentityDocAuth::Response.new(success: false))
+
+    click_idv_continue
+
+    expect(page).to have_current_path(idv_doc_auth_link_sent_step)
+  end
+
+  it 'shows the step indicator' do
+    expect(page).to have_css(
+      '.step-indicator__step--current',
+      text: t('step_indicator.flows.idv.verify_id'),
+    )
+  end
+
   context 'cancelled' do
     before do
       document_capture_session = user.document_capture_sessions.last
       document_capture_session.cancelled_at = Time.zone.now
       document_capture_session.save!
-      visit current_path
     end
 
-    it 'does not poll' do
-      expect(page).to_not have_css('script[src*="doc-capture-polling"]')
-    end
+    it 'redirects to before hybrid flow started and shows alert text' do
+      click_idv_continue
 
-    it 'does not show continue button or instruction text' do
-      expect(page).to_not have_button(t('forms.buttons.continue'), visible: :all)
-      expect(page).to_not have_content(:all, t('doc_auth.info.link_sent_complete_nojs'))
+      expect(page).to have_current_path(idv_doc_auth_upload_step)
+      expect(page).to have_css(
+        '.usa-alert--error',
+        text: t('errors.doc_auth.document_capture_cancelled'),
+      )
     end
   end
 
@@ -121,21 +133,4 @@ feature 'doc auth link sent step' do
 
   it_behaves_like 'with doc capture polling enabled'
   it_behaves_like 'with doc capture polling disabled'
-
-  context 'ial2 step indicator enabled' do
-    it 'shows the step indicator' do
-      expect(page).to have_css(
-        '.step-indicator__step--current',
-        text: t('step_indicator.flows.idv.verify_id'),
-      )
-    end
-  end
-
-  context 'ial2 step indicator disabled' do
-    let(:ial2_step_indicator_enabled) { false }
-
-    it 'does not show the step indicator' do
-      expect(page).not_to have_css('.step-indicator')
-    end
-  end
 end

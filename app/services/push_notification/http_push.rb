@@ -65,15 +65,31 @@ module PushNotification
         jwt(service_provider),
         'Accept' => 'application/json',
         'Content-Type' => 'application/secevent+jwt',
-      )
+      ) do |req|
+        req.options.context = { service_name: 'http_push_direct' }
+      end
 
       unless response.success?
-        raise PushNotification::PushNotificationError, "status=#{response.status}"
+        Rails.logger.warn(
+          {
+            event: 'http_push_error',
+            event_type: event.event_type,
+            service_provider: service_provider.issuer,
+            status: response.status,
+          }.to_json,
+        )
       end
     rescue Faraday::TimeoutError,
            Faraday::ConnectionFailed,
            PushNotification::PushNotificationError => err
-      NewRelic::Agent.notice_error(err)
+      Rails.logger.warn(
+        {
+          event: 'http_push_error',
+          event_type: event.event_type,
+          service_provider: service_provider.issuer,
+          error: err.message,
+        }.to_json,
+      )
     end
 
     def deliver_local(service_provider)
@@ -105,7 +121,10 @@ module PushNotification
     end
 
     def faraday
-      Faraday.new { |faraday| faraday.adapter :net_http }
+      Faraday.new do |f|
+        f.request :instrumentation, name: 'request_log.faraday'
+        f.adapter :net_http
+      end
     end
 
     def agency_uuid(service_provider)

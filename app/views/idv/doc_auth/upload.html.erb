@@ -1,5 +1,7 @@
 <% title t('titles.doc_auth.verify') %>
 
+<%= render 'idv/doc_auth/error_messages', flow_session: flow_session %>
+
 <h1 class='margin-top-0 margin-bottom-1'>
   <% if liveness_checking_enabled? %>
     <%= t('doc_auth.headings.upload_liveness_enabled') %>
@@ -50,7 +52,7 @@
       :doc_auth,
       url: url_for(type: :mobile),
       method: 'PUT',
-      html: { autocomplete: 'off', role: 'form', class: 'margin-top-2' },
+      html: { autocomplete: 'off', class: 'margin-top-2' },
     ) do %>
       <button type="submit" class="usa-button usa-button--big margin-top-05">
         <%= t('doc_auth.buttons.use_phone') %>
@@ -69,7 +71,7 @@
       :doc_auth,
       url: url_for(type: :desktop),
       method: 'PUT',
-      html: { autocomplete: 'off', role: 'form', class: 'inline' }
+      html: { autocomplete: 'off', class: 'inline' }
     ) do %>
       <button type="submit" class="usa-button usa-button--unstyled">
         <%= t('doc_auth.info.upload_computer_link') %>
@@ -83,5 +85,5 @@
   </div>
 </div>
 
-<%= render 'idv/doc_auth/start_over_or_cancel' %>
+<%= render 'idv/doc_auth/start_over_or_cancel', step: 'upload' %>
 <%= javascript_packs_tag_once 'upload-step' %>

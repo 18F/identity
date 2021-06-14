@@ -1,12 +1,10 @@
-<% if IdentityConfig.store.ial2_step_indicator_enabled %>
-  <% content_for(:pre_flash_content) do %>
-    <%= render 'shared/step_indicator', {
-      steps: Idv::Flows::DocAuthFlow::STEP_INDICATOR_STEPS,
-      current_step: :verify_phone_or_address,
-      locale_scope: 'idv',
-      class: 'margin-x-neg-2 margin-top-neg-4 tablet:margin-x-neg-6 tablet:margin-top-neg-4',
-    } %>
-  <% end %>
+<% content_for(:pre_flash_content) do %>
+  <%= render 'shared/step_indicator', {
+    steps: Idv::Flows::DocAuthFlow::STEP_INDICATOR_STEPS,
+    current_step: :verify_phone_or_address,
+    locale_scope: 'idv',
+    class: 'margin-x-neg-2 margin-top-neg-4 tablet:margin-x-neg-6 tablet:margin-top-neg-4',
+  } %>
 <% end %>
 
 <% title t('titles.enter_2fa_code') %>
@@ -19,7 +17,7 @@
   <%= @presenter.phone_number_message %>
 </p>
 
-<%= form_tag(:idv_otp_verification, method: :put, role: 'form', class: 'margin-top-4') do %>
+<%= form_tag(:idv_otp_verification, method: :put, class: 'margin-top-4') do %>
   <div class="grid-row margin-bottom-5">
     <div class="grid-col-12 tablet:grid-col-6">
       <%= label_tag :code, t('forms.two_factor.code'), class: 'block bold' %>
@@ -50,6 +48,6 @@
 
 <div class="margin-top-4 border-top border-primary-light">
   <div class="margin-top-1">
-    <%= link_to t('links.cancel'), idv_cancel_path %>
+    <%= link_to t('links.cancel'), idv_cancel_path(step: 'phone_otp_verification') %>
   </div>
 </div>

@@ -29,9 +29,14 @@ RSpec.describe ResolutionProofingJob, type: :job do
   let(:lexisnexis_transaction_id) { SecureRandom.uuid }
   let(:aamva_transaction_id) { SecureRandom.uuid }
   let(:resolution_proofer) do
-    instance_double(LexisNexis::InstantVerify::Proofer, class: LexisNexis::InstantVerify::Proofer)
+    instance_double(
+      Proofing::LexisNexis::InstantVerify::Proofer,
+      class: Proofing::LexisNexis::InstantVerify::Proofer,
+    )
   end
-  let(:state_id_proofer) { instance_double(Aamva::Proofer, class: Aamva::Proofer) }
+  let(:state_id_proofer) do
+    instance_double(Proofing::Aamva::Proofer, class: Proofing::Aamva::Proofer)
+  end
   let(:trace_id) { SecureRandom.uuid }
   let(:document_expired) { false }
 
@@ -116,7 +121,7 @@ RSpec.describe ResolutionProofingJob, type: :job do
             should_proof_state_id: true,
             stages: {
               resolution: {
-                client: LexisNexis::InstantVerify::Proofer.vendor_name,
+                client: Proofing::LexisNexis::InstantVerify::Proofer.vendor_name,
                 errors: {},
                 exception: nil,
                 success: true,
@@ -124,7 +129,7 @@ RSpec.describe ResolutionProofingJob, type: :job do
                 transaction_id: lexisnexis_transaction_id,
               },
               state_id: {
-                client: Aamva::Proofer.vendor_name,
+                client: Proofing::Aamva::Proofer.vendor_name,
                 errors: {},
                 exception: nil,
                 success: true,
@@ -177,7 +182,7 @@ RSpec.describe ResolutionProofingJob, type: :job do
               should_proof_state_id: true,
               stages: {
                 state_id: {
-                  client: Aamva::Proofer.vendor_name,
+                  client: Proofing::Aamva::Proofer.vendor_name,
                   errors: {},
                   exception: nil,
                   success: true,
@@ -185,7 +190,7 @@ RSpec.describe ResolutionProofingJob, type: :job do
                   transaction_id: aamva_transaction_id,
                 },
                 resolution: {
-                  client: LexisNexis::InstantVerify::Proofer.vendor_name,
+                  client: Proofing::LexisNexis::InstantVerify::Proofer.vendor_name,
                   errors: {},
                   exception: kind_of(String),
                   success: false,

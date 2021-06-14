@@ -5,7 +5,6 @@ feature 'doc capture document capture step' do
   include DocAuthHelper
   include DocCaptureHelper
 
-  let(:ial2_step_indicator_enabled) { true }
   let(:max_attempts) { IdentityConfig.store.acuant_max_attempts }
   let(:user) { user_with_2fa }
   let(:liveness_enabled) { true }
@@ -13,8 +12,6 @@ feature 'doc capture document capture step' do
   let(:fake_analytics) { FakeAnalytics.new }
   let(:sp_name) { 'Test SP' }
   before do
-    allow(IdentityConfig.store).to receive(:ial2_step_indicator_enabled).
-      and_return(ial2_step_indicator_enabled)
     allow(IdentityConfig.store).to receive(:liveness_checking_enabled).
       and_return(liveness_enabled)
     allow(Identity::Hostdata::EC2).to receive(:load).
@@ -27,6 +24,73 @@ feature 'doc capture document capture step' do
       visit_idp_from_oidc_sp_with_ial2
     end
     allow_any_instance_of(DeviceDetector).to receive(:device_type).and_return('mobile')
+  end
+
+  it 'offers the user the option to cancel and return to desktop' do
+    complete_doc_capture_steps_before_first_step(user)
+
+    click_on t('links.cancel')
+
+    expect(page).to have_text(t('idv.cancel.headings.prompt.hybrid'))
+
+    click_on t('forms.buttons.cancel')
+
+    expect(page).to have_text(t('idv.cancel.headings.confirmation.hybrid'))
+  end
+
+  it 'advances original session once complete' do
+    using_doc_capture_session { attach_and_submit_images }
+
+    click_idv_continue
+    expect(page).to have_current_path(idv_doc_auth_ssn_step)
+  end
+
+  it 'does not advance original session with errors' do
+    using_doc_capture_session do
+      mock_general_doc_auth_client_error(:create_document)
+      attach_and_submit_images
+    end
+
+    click_idv_continue
+    expect(page).to have_current_path(idv_doc_auth_link_sent_step)
+  end
+
+  context 'when using async uploads' do
+    it 'advances original session once complete' do
+      using_doc_capture_session do
+        set_up_document_capture_result(
+          uuid: DocumentCaptureSession.last.uuid,
+          idv_result: {
+            success: true,
+            errors: {},
+            messages: [],
+            pii_from_doc: {},
+          },
+        )
+        click_idv_continue
+      end
+
+      click_idv_continue
+      expect(page).to have_current_path(idv_doc_auth_ssn_step)
+    end
+
+    it 'does not advance original session with errors' do
+      using_doc_capture_session do
+        set_up_document_capture_result(
+          uuid: DocumentCaptureSession.last.uuid,
+          idv_result: {
+            success: false,
+            errors: {},
+            messages: ['message'],
+            pii_from_doc: {},
+          },
+        )
+        click_idv_continue
+      end
+
+      click_idv_continue
+      expect(page).to have_current_path(idv_doc_auth_link_sent_step)
+    end
   end
 
   context 'invalid session' do
@@ -75,30 +139,17 @@ feature 'doc capture document capture step' do
   end
 
   context 'when liveness checking is enabled' do
-    let(:ial2_step_indicator_enabled) { true }
     let(:liveness_enabled) { true }
 
     before do
-      allow(IdentityConfig.store).to receive(:ial2_step_indicator_enabled).
-        and_return(ial2_step_indicator_enabled)
       complete_doc_capture_steps_before_first_step(user)
     end
 
-    context 'ial2 step indicator enabled' do
-      it 'shows the step indicator' do
-        expect(page).to have_css(
-          '.step-indicator__step--current',
-          text: t('step_indicator.flows.idv.verify_id'),
-        )
-      end
-    end
-
-    context 'ial2 step indicator disabled' do
-      let(:ial2_step_indicator_enabled) { false }
-
-      it 'does not show the step indicator' do
-        expect(page).not_to have_css('.step-indicator')
-      end
+    it 'shows the step indicator' do
+      expect(page).to have_css(
+        '.step-indicator__step--current',
+        text: t('step_indicator.flows.idv.verify_id'),
+      )
     end
 
     context 'when the SP does not request strict IAL2' do

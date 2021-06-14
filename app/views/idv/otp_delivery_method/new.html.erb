@@ -1,12 +1,10 @@
-<% if IdentityConfig.store.ial2_step_indicator_enabled %>
-  <% content_for(:pre_flash_content) do %>
-    <%= render 'shared/step_indicator', {
-      steps: Idv::Flows::DocAuthFlow::STEP_INDICATOR_STEPS,
-      current_step: :verify_phone_or_address,
-      locale_scope: 'idv',
-      class: 'margin-x-neg-2 margin-top-neg-4 tablet:margin-x-neg-6 tablet:margin-top-neg-4',
-    } %>
-  <% end %>
+<% content_for(:pre_flash_content) do %>
+  <%= render 'shared/step_indicator', {
+    steps: Idv::Flows::DocAuthFlow::STEP_INDICATOR_STEPS,
+    current_step: :verify_phone_or_address,
+    locale_scope: 'idv',
+    class: 'margin-x-neg-2 margin-top-neg-4 tablet:margin-x-neg-6 tablet:margin-top-neg-4',
+  } %>
 <% end %>
 
 <% title t('titles.doc_auth.otp_delivery') %>
@@ -20,7 +18,7 @@
 
 
 <%= form_tag(idv_otp_delivery_method_url,
-             autocomplete: 'off', role: 'form', class: 'margin-top-4',
+             autocomplete: 'off', class: 'margin-top-4',
              method: :put) do |f| %>
 
   <fieldset class="margin-bottom-4 padding-0 border-none">
@@ -68,6 +66,6 @@
 
 <div class="margin-top-4 border-top border-primary-light">
   <div class="margin-top-1">
-    <%= link_to(t('links.cancel'), idv_cancel_path) %>
+    <%= link_to(t('links.cancel'), idv_cancel_path(step: 'phone_otp_delivery_selection')) %>
   </div>
 </div>

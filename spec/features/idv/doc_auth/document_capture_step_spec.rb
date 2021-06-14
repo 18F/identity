@@ -4,15 +4,12 @@ feature 'doc auth document capture step' do
   include IdvStepHelper
   include DocAuthHelper
 
-  let(:ial2_step_indicator_enabled) { true }
   let(:max_attempts) { IdentityConfig.store.acuant_max_attempts }
   let(:user) { user_with_2fa }
   let(:liveness_enabled) { false }
   let(:fake_analytics) { FakeAnalytics.new }
   let(:sp_name) { 'Test SP' }
   before do
-    allow(IdentityConfig.store).to receive(:ial2_step_indicator_enabled).
-      and_return(ial2_step_indicator_enabled)
     allow(IdentityConfig.store).to receive(:liveness_checking_enabled).
       and_return(liveness_enabled)
     allow(Identity::Hostdata::EC2).to receive(:load).
@@ -28,6 +25,13 @@ feature 'doc auth document capture step' do
     complete_doc_auth_steps_before_document_capture_step
   end
 
+  it 'shows the step indicator' do
+    expect(page).to have_css(
+      '.step-indicator__step--current',
+      text: t('step_indicator.flows.idv.verify_id'),
+    )
+  end
+
   context 'when javascript is enabled', js: true do
     it 'logs return to sp link click' do
       click_on t('idv.troubleshooting.options.get_help_at_sp', sp_name: sp_name)
@@ -37,23 +41,6 @@ feature 'doc auth document capture step' do
         step: 'document_capture',
         location: 'documents_having_trouble',
       )
-    end
-  end
-
-  context 'ial2 step indicator enabled' do
-    it 'shows the step indicator' do
-      expect(page).to have_css(
-        '.step-indicator__step--current',
-        text: t('step_indicator.flows.idv.verify_id'),
-      )
-    end
-  end
-
-  context 'ial2 step indicator disabled' do
-    let(:ial2_step_indicator_enabled) { false }
-
-    it 'does not show the step indicator' do
-      expect(page).not_to have_css('.step-indicator')
     end
   end
 
@@ -214,6 +201,14 @@ feature 'doc auth document capture step' do
 
       expect(page).to have_current_path(next_step)
       expect_costing_for_document
+      expect(DocAuthLog.find_by(user_id: user.id).state).to eq('MT')
+    end
+
+    it 'does not track state if state tracking is disabled' do
+      allow(IdentityConfig.store).to receive(:state_tracking_enabled).and_return(false)
+      attach_and_submit_images
+
+      expect(DocAuthLog.find_by(user_id: user.id).state).to be_nil
     end
 
     it 'throttles calls to acuant and allows retry after the attempt window' do

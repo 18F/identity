@@ -51,20 +51,24 @@ describe SamlIdpController do
     end
 
     let(:right_cert_settings) do
-      sp1_saml_settings.tap do |settings|
-        settings.issuer = service_provider.issuer
-        settings.assertion_consumer_logout_service_url = 'https://example.com'
-      end
+      saml_settings(
+        overrides: {
+          issuer: service_provider.issuer,
+          assertion_consumer_logout_service_url: 'https://example.com',
+        },
+      )
     end
 
     let(:wrong_cert_settings) do
-      sp1_saml_settings.tap do |settings|
-        settings.issuer = service_provider.issuer
-        settings.certificate = File.read(Rails.root.join('certs', 'sp', 'saml_test_sp2.crt'))
-        settings.private_key = OpenSSL::PKey::RSA.new(
-          File.read(Rails.root + 'keys/saml_test_sp2.key'),
-        ).to_pem
-      end
+      saml_settings(
+        overrides: {
+          issuer: service_provider.issuer,
+          certificate: File.read(Rails.root.join('certs', 'sp', 'saml_test_sp2.crt')),
+          private_key: OpenSSL::PKey::RSA.new(
+            File.read(Rails.root + 'keys/saml_test_sp2.key'),
+          ).to_pem,
+        },
+      )
     end
 
     it 'accepts requests from a correct cert' do
@@ -292,7 +296,11 @@ describe SamlIdpController do
         stub_analytics
         allow(@analytics).to receive(:track_event)
 
-        saml_get_auth(invalid_authn_context_settings)
+        saml_get_auth(
+          saml_settings(
+            overrides: { authn_context: 'http://idmanagement.gov/ns/assurance/loa/5' },
+          ),
+        )
 
         expect(controller).to render_template('saml_idp/auth/error')
         expect(response.status).to eq(400)
@@ -364,7 +372,12 @@ describe SamlIdpController do
       it 'responds with an error page' do
         user = create(:user, :signed_up)
 
-        generate_saml_response(user, sp2_saml_settings_inactive)
+        generate_saml_response(
+          user,
+          saml_settings(
+            overrides: { issuer: 'http://localhost:3000/inactive_sp' },
+          ),
+        )
 
         expect(controller).to redirect_to sp_inactive_error_url
       end
@@ -377,7 +390,7 @@ describe SamlIdpController do
         stub_analytics
         allow(@analytics).to receive(:track_event)
 
-        generate_saml_response(user, invalid_service_provider_settings)
+        generate_saml_response(user, saml_settings(overrides: { issuer: 'invalid_provider' }))
 
         expect(controller).to render_template('saml_idp/auth/error')
         expect(response.status).to eq(400)
@@ -404,7 +417,15 @@ describe SamlIdpController do
         stub_analytics
         allow(@analytics).to receive(:track_event)
 
-        generate_saml_response(user, invalid_service_provider_and_authn_context_settings)
+        generate_saml_response(
+          user,
+          saml_settings(
+            overrides: {
+              issuer: 'invalid_provider',
+              authn_context: 'http://idmanagement.gov/ns/assurance/loa/5',
+            },
+          ),
+        )
 
         expect(controller).to render_template('saml_idp/auth/error')
         expect(response.status).to eq(400)
@@ -562,7 +583,13 @@ describe SamlIdpController do
       let(:user) { create(:user, :signed_up) }
 
       before do
-        generate_saml_response(user, email_nameid_saml_settings_for_allowed_issuer)
+        settings = saml_settings(
+          overrides: {
+            issuer: 'https://rp1.serviceprovider.com/auth/saml/metadata',
+            name_identifier_format: Saml::Idp::Constants::NAME_ID_FORMAT_EMAIL,
+          },
+        )
+        generate_saml_response(user, settings)
       end
 
       # Testing the <saml:Subject> element when the SP is configured to use a
@@ -604,7 +631,7 @@ describe SamlIdpController do
       end
 
       it 'defaults to persistent' do
-        auth_settings = missing_nameid_format_saml_settings
+        auth_settings = saml_settings(overrides: { name_identifier_format: nil })
         IdentityLinker.new(user, auth_settings.issuer).link_identity
         user.identities.last.update!(verified_attributes: ['email'])
         generate_saml_response(user, auth_settings)
@@ -627,7 +654,12 @@ describe SamlIdpController do
       end
 
       it 'defaults to email when added to issuers_with_email_nameid_format' do
-        auth_settings = missing_nameid_format_saml_settings_for_allowed_email_issuer
+        auth_settings = saml_settings(
+          overrides: {
+            issuer: 'https://rp1.serviceprovider.com/auth/saml/metadata',
+            name_identifier_format: nil,
+          },
+        )
         IdentityLinker.new(user, auth_settings.issuer).link_identity
         user.identities.last.update!(verified_attributes: ['email'])
         generate_saml_response(user, auth_settings)
@@ -655,7 +687,10 @@ describe SamlIdpController do
         stub_analytics
         allow(@analytics).to receive(:track_event)
 
-        saml_get_auth(email_nameid_saml_settings_for_disallowed_issuer)
+        auth_settings = saml_settings(
+          overrides: { name_identifier_format: Saml::Idp::Constants::NAME_ID_FORMAT_EMAIL },
+        )
+        saml_get_auth(auth_settings)
 
         expect(controller).to render_template('saml_idp/auth/error')
         expect(response.status).to eq(400)

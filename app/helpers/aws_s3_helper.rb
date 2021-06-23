@@ -43,6 +43,6 @@ module AwsS3Helper
   end
 
   def presigned_url_expiration_in_seconds
-    IdentityConfig.store.session_total_duration_timeout_in_minutes.minutes.seconds.to_i
+    60
   end
 end

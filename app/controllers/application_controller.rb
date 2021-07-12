@@ -34,6 +34,7 @@ class ApplicationController < ActionController::Base
   before_action :cache_issuer_in_cookie
 
   def session_expires_at
+    return if @skip_session_expiration || @skip_session_load
     now = Time.zone.now
     session[:session_expires_at] = now + Devise.timeout_in
     session[:pinged_at] ||= now
@@ -102,6 +103,7 @@ class ApplicationController < ActionController::Base
   end
 
   def cache_issuer_in_cookie
+    return if @skip_session_load
     cookies[:sp_issuer] = if current_sp.nil?
                             nil
                           else
@@ -137,19 +139,20 @@ class ApplicationController < ActionController::Base
   end
 
   def sp_from_sp_session
-    sp = ServiceProvider.from_issuer(sp_session[:issuer])
-    sp if sp.is_a? ServiceProvider
+    ServiceProvider.find_by(issuer: sp_session[:issuer]) if sp_session[:issuer].present?
   end
 
   def sp_from_request_id
-    sp = ServiceProvider.from_issuer(service_provider_request.issuer)
-    sp if sp.is_a? ServiceProvider
+    if service_provider_request.issuer.present?
+      ServiceProvider.find_by(issuer: service_provider_request.issuer)
+    end
   end
 
   def sp_from_request_issuer_logout
     return if action_name != 'logout'
-    issuer_sp = ServiceProvider.from_issuer(saml_request&.service_provider&.identifier)
-    issuer_sp if issuer_sp.is_a? ServiceProvider
+    if saml_request&.service_provider&.identifier.present?
+      ServiceProvider.find_by(issuer: saml_request.service_provider.identifier)
+    end
   end
 
   def service_provider_request
@@ -356,7 +359,7 @@ class ApplicationController < ActionController::Base
 
   def render_timeout(exception)
     analytics.track_event(Analytics::RESPONSE_TIMED_OUT, analytics_exception_info(exception))
-    if exception.class == Rack::Timeout::RequestTimeoutException
+    if exception.instance_of?(Rack::Timeout::RequestTimeoutException)
       NewRelic::Agent.notice_error(exception)
     end
     render template: 'pages/page_took_too_long',

@@ -32,7 +32,7 @@ module Idv
         doc_pii_response = validate_pii_from_doc(client_response) if client_response.success?
       end
 
-      return determine_response(
+      determine_response(
         form_response: form_response,
         client_response: client_response,
         doc_pii_response: doc_pii_response,
@@ -74,7 +74,7 @@ module Idv
         liveness_checking_enabled: liveness_checking_enabled?,
       )
       response.extra.merge!(extra_attributes)
-      response.extra.merge!(state: response.pii_from_doc[:state])
+      response.extra[:state] = response.pii_from_doc[:state]
 
       update_analytics(response)
 
@@ -150,10 +150,6 @@ module Idv
       errors.add(:limit, t('errors.doc_auth.throttled_heading'))
     end
 
-    def self.human_attribute_name(attr, options = {})
-      I18n.t("doc_auth.headings.document_capture_#{attr}", options)
-    end
-
     def document_capture_session_uuid
       params[:document_capture_session_uuid]
     end
@@ -199,7 +195,7 @@ module Idv
         to_h.
         transform_values do |str|
           JSON.parse(str)
-        rescue JSON::ParserError
+      rescue JSON::ParserError
           nil
         end.
         compact.

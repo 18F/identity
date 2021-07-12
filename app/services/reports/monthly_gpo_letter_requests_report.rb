@@ -5,14 +5,17 @@ module Reports
     REPORT_NAME = 'monthly-usps-letter-requests-report'.freeze
 
     def call(start_time: first_of_this_month, end_time: end_of_today)
-
       daily_results = transaction_with_timeout do
         ::LetterRequestsToGpoFtpLog.where(ftp_at: start_time..end_time)
       end
       totals = calculate_totals(daily_results)
       save_report(
-        REPORT_NAME, {total_letter_requests: totals,
-                      daily_letter_requests: daily_results}.to_json
+        REPORT_NAME,
+        {
+          total_letter_requests: totals,
+          daily_letter_requests: daily_results,
+        }.to_json,
+        extension: 'json',
       )
     end
 

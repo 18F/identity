@@ -198,7 +198,7 @@ describe SamlIdpController do
       let(:asserter) do
         AttributeAsserter.new(
           user: user,
-          service_provider: ServiceProvider.from_issuer(sp1_ial2_saml_settings.issuer),
+          service_provider: ServiceProvider.find_by(issuer: sp1_ial2_saml_settings.issuer),
           authn_request: this_authn_request,
           name_id_format: Saml::Idp::Constants::NAME_ID_FORMAT_PERSISTENT,
           decrypted_pii: pii,
@@ -253,7 +253,7 @@ describe SamlIdpController do
           with(Analytics::SAML_AUTH,
                success: true,
                errors: {},
-               nameid_format: Saml::Idp::Constants::NAME_ID_FORMAT_EMAIL,
+               nameid_format: Saml::Idp::Constants::NAME_ID_FORMAT_PERSISTENT,
                authn_context: ['http://idmanagement.gov/ns/assurance/ial/2'],
                service_provider: 'https://rp1.serviceprovider.com/auth/saml/metadata',
                endpoint: '/api/saml/auth2021',
@@ -267,7 +267,6 @@ describe SamlIdpController do
         saml_get_auth(sp1_ial2_saml_settings)
       end
     end
-
 
     context 'with IAL2 and the identity is not already verified' do
       it 'redirects to IdV URL for IAL2 proofer' do
@@ -389,7 +388,7 @@ describe SamlIdpController do
           error_details: { service_provider: [:unauthorized_service_provider] },
           nameid_format: Saml::Idp::Constants::NAME_ID_FORMAT_PERSISTENT,
           authn_context: request_authn_contexts,
-          service_provider: 'invalid_provider',
+          service_provider: nil,
         }
 
         expect(@analytics).to have_received(:track_event).
@@ -423,7 +422,7 @@ describe SamlIdpController do
           },
           nameid_format: Saml::Idp::Constants::NAME_ID_FORMAT_PERSISTENT,
           authn_context: ['http://idmanagement.gov/ns/assurance/loa/5'],
-          service_provider: 'invalid_provider',
+          service_provider: nil,
         }
 
         expect(@analytics).to have_received(:track_event).
@@ -562,7 +561,11 @@ describe SamlIdpController do
       let(:user) { create(:user, :signed_up) }
 
       before do
-        generate_saml_response(user, email_nameid_saml_settings_for_allowed_issuer)
+        settings = email_nameid_saml_settings
+        ServiceProvider.
+          find_by(issuer: settings.issuer).
+          update!(email_nameid_format_allowed: true)
+        generate_saml_response(user, settings)
       end
 
       # Testing the <saml:Subject> element when the SP is configured to use a
@@ -626,8 +629,11 @@ describe SamlIdpController do
           with(Analytics::SAML_AUTH, analytics_hash)
       end
 
-      it 'defaults to email when added to issuers_with_email_nameid_format' do
-        auth_settings = missing_nameid_format_saml_settings_for_allowed_email_issuer
+      it 'defaults to email when configured' do
+        auth_settings = missing_nameid_format_saml_settings
+        ServiceProvider.
+          find_by(issuer: auth_settings.issuer).
+          update!(email_nameid_format_allowed: true)
         IdentityLinker.new(user, auth_settings.issuer).link_identity
         user.identities.last.update!(verified_attributes: ['email'])
         generate_saml_response(user, auth_settings)
@@ -639,7 +645,7 @@ describe SamlIdpController do
           errors: {},
           nameid_format: Saml::Idp::Constants::NAME_ID_FORMAT_EMAIL,
           authn_context: request_authn_contexts,
-          service_provider: 'https://rp1.serviceprovider.com/auth/saml/metadata',
+          service_provider: auth_settings.issuer,
           endpoint: '/api/saml/auth2021',
           idv: false,
           finish_profile: false,
@@ -670,6 +676,100 @@ describe SamlIdpController do
           service_provider: 'http://localhost:3000',
         }
 
+        expect(@analytics).to have_received(:track_event).
+          with(Analytics::SAML_AUTH, analytics_hash)
+      end
+    end
+
+    context 'service provider sends unsupported NameID format' do
+      let(:user) { create(:user, :signed_up) }
+      let(:xmldoc) { SamlResponseDoc.new('controller', 'response_assertion', response) }
+      let(:subject) { xmldoc.subject_nodeset[0] }
+      let(:name_id) { subject.at('//ds:NameID', ds: Saml::XML::Namespaces::ASSERTION) }
+
+      before do
+        stub_analytics
+        allow(@analytics).to receive(:track_event)
+      end
+
+      it 'sends the appropriate identifier for non-email NameID SPs' do
+        auth_settings = missing_nameid_format_saml_settings
+        auth_settings.name_identifier_format =
+          'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified'
+        IdentityLinker.new(user, auth_settings.issuer).link_identity
+        user.identities.last.update!(verified_attributes: ['email'])
+        generate_saml_response(user, auth_settings)
+
+        expect(response.status).to eq(200)
+
+        analytics_hash = {
+          success: true,
+          errors: {},
+          nameid_format: Saml::Idp::Constants::NAME_ID_FORMAT_PERSISTENT,
+          authn_context: request_authn_contexts,
+          service_provider: 'http://localhost:3000',
+          endpoint: '/api/saml/auth2021',
+          idv: false,
+          finish_profile: false,
+        }
+
+        expect(name_id.children.first.to_s).to eq(user.agency_identities.last.uuid)
+        expect(@analytics).to have_received(:track_event).
+          with(Analytics::SAML_AUTH, analytics_hash)
+      end
+      it 'sends the appropriate identifier for email NameID SPs' do
+        auth_settings = missing_nameid_format_saml_settings
+        auth_settings.name_identifier_format =
+          'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified'
+        ServiceProvider.
+          find_by(issuer: auth_settings.issuer).
+          update!(email_nameid_format_allowed: true)
+        IdentityLinker.new(user, auth_settings.issuer).link_identity
+        user.identities.last.update!(verified_attributes: ['email'])
+        generate_saml_response(user, auth_settings)
+
+        expect(response.status).to eq(200)
+
+        analytics_hash = {
+          success: true,
+          errors: {},
+          nameid_format: Saml::Idp::Constants::NAME_ID_FORMAT_EMAIL,
+          authn_context: request_authn_contexts,
+          service_provider: auth_settings.issuer,
+          endpoint: '/api/saml/auth2021',
+          idv: false,
+          finish_profile: false,
+        }
+
+        expect(name_id.children.first.to_s).to eq(user.email_addresses.first.email)
+        expect(@analytics).to have_received(:track_event).
+          with(Analytics::SAML_AUTH, analytics_hash)
+      end
+      it 'sends the old user ID for legacy SPS' do
+        auth_settings = missing_nameid_format_saml_settings
+        auth_settings.name_identifier_format =
+          'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified'
+        ServiceProvider.
+          find_by(issuer: auth_settings.issuer).
+          update!(use_legacy_name_id_behavior: true)
+        IdentityLinker.new(user, auth_settings.issuer).link_identity
+        user.identities.last.update!(verified_attributes: ['email'])
+        generate_saml_response(user, auth_settings)
+
+        expect(response.status).to eq(200)
+
+        analytics_hash = {
+          success: true,
+          errors: {},
+          nameid_format: 'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified',
+          authn_context: request_authn_contexts,
+          service_provider: 'http://localhost:3000',
+          endpoint: '/api/saml/auth2021',
+          idv: false,
+          finish_profile: false,
+        }
+
+        expect(name_id.children.first.to_s).to eq(user.id.to_s)
         expect(@analytics).to have_received(:track_event).
           with(Analytics::SAML_AUTH, analytics_hash)
       end
@@ -1156,7 +1256,7 @@ describe SamlIdpController do
 
     def stub_requested_attributes
       request_parser = instance_double(SamlRequestPresenter)
-      service_provider = ServiceProvider.from_issuer('http://localhost:3000')
+      service_provider = ServiceProvider.find_by(issuer: 'http://localhost:3000')
       service_provider.ial = 2
       service_provider.save
       expect(SamlRequestPresenter).to receive(:new).

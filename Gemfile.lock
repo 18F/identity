@@ -1,19 +1,19 @@
 GIT
   remote: https://github.com/18F/identity-doc-auth.git
-  revision: 6aad84cb78541d8702ae8e48962dddeff807b5c5
-  tag: v0.9.3
+  revision: 2b1992d83e6a152b2234a5b71b9682d5f89635aa
+  tag: v0.10.1
   specs:
-    identity-doc-auth (0.9.3)
+    identity-doc-auth (0.10.1)
       activesupport
       faraday
       redacted_struct (>= 1.0.0)
 
 GIT
   remote: https://github.com/18F/identity-hostdata.git
-  revision: 0583a0a5abd9052c8c95d96c821f9564c04e82c4
-  tag: v3.2.0
+  revision: 32fc831b47d17c878381279c936014e9956fcbe7
+  tag: v3.3.0
   specs:
-    identity-hostdata (3.2.0)
+    identity-hostdata (3.3.0)
       activesupport (~> 6.1)
       aws-sdk-s3 (~> 1.8)
 
@@ -27,13 +27,6 @@ GIT
       rails (>= 6.1)
 
 GIT
-  remote: https://github.com/18F/identity-proofer-gem.git
-  revision: 9c73058b6cafd5299266fb9d554ced04ec63b84a
-  ref: v2.8.0
-  specs:
-    proofer (2.8.0)
-
-GIT
   remote: https://github.com/18F/identity-validations.git
   revision: 0cc887c73f9909bef142585d557613c290c7aeec
   tag: v0.6.0
@@ -42,10 +35,10 @@ GIT
 
 GIT
   remote: https://github.com/18F/saml_idp.git
-  revision: 1b59d834efcc4df3d40db213eb4092fc4d5ff4c6
-  tag: v0.14.1-18f
+  revision: 89d93da7b45cad7f01b5335f762f5f020d40765f
+  tag: v0.14.2-18f
   specs:
-    saml_idp (0.14.1.pre.18f)
+    saml_idp (0.14.2.pre.18f)
       activesupport
       builder
       faraday
@@ -66,60 +59,60 @@ GIT
 GEM
   remote: https://rubygems.org/
   specs:
-    actioncable (6.1.3.2)
-      actionpack (= 6.1.3.2)
-      activesupport (= 6.1.3.2)
+    actioncable (6.1.4)
+      actionpack (= 6.1.4)
+      activesupport (= 6.1.4)
       nio4r (~> 2.0)
       websocket-driver (>= 0.6.1)
-    actionmailbox (6.1.3.2)
-      actionpack (= 6.1.3.2)
-      activejob (= 6.1.3.2)
-      activerecord (= 6.1.3.2)
-      activestorage (= 6.1.3.2)
-      activesupport (= 6.1.3.2)
+    actionmailbox (6.1.4)
+      actionpack (= 6.1.4)
+      activejob (= 6.1.4)
+      activerecord (= 6.1.4)
+      activestorage (= 6.1.4)
+      activesupport (= 6.1.4)
       mail (>= 2.7.1)
-    actionmailer (6.1.3.2)
-      actionpack (= 6.1.3.2)
-      actionview (= 6.1.3.2)
-      activejob (= 6.1.3.2)
-      activesupport (= 6.1.3.2)
+    actionmailer (6.1.4)
+      actionpack (= 6.1.4)
+      actionview (= 6.1.4)
+      activejob (= 6.1.4)
+      activesupport (= 6.1.4)
       mail (~> 2.5, >= 2.5.4)
       rails-dom-testing (~> 2.0)
-    actionpack (6.1.3.2)
-      actionview (= 6.1.3.2)
-      activesupport (= 6.1.3.2)
+    actionpack (6.1.4)
+      actionview (= 6.1.4)
+      activesupport (= 6.1.4)
       rack (~> 2.0, >= 2.0.9)
       rack-test (>= 0.6.3)
       rails-dom-testing (~> 2.0)
       rails-html-sanitizer (~> 1.0, >= 1.2.0)
-    actiontext (6.1.3.2)
-      actionpack (= 6.1.3.2)
-      activerecord (= 6.1.3.2)
-      activestorage (= 6.1.3.2)
-      activesupport (= 6.1.3.2)
+    actiontext (6.1.4)
+      actionpack (= 6.1.4)
+      activerecord (= 6.1.4)
+      activestorage (= 6.1.4)
+      activesupport (= 6.1.4)
       nokogiri (>= 1.8.5)
-    actionview (6.1.3.2)
-      activesupport (= 6.1.3.2)
+    actionview (6.1.4)
+      activesupport (= 6.1.4)
       builder (~> 3.1)
       erubi (~> 1.4)
       rails-dom-testing (~> 2.0)
       rails-html-sanitizer (~> 1.1, >= 1.2.0)
-    activejob (6.1.3.2)
-      activesupport (= 6.1.3.2)
+    activejob (6.1.4)
+      activesupport (= 6.1.4)
       globalid (>= 0.3.6)
-    activemodel (6.1.3.2)
-      activesupport (= 6.1.3.2)
-    activerecord (6.1.3.2)
-      activemodel (= 6.1.3.2)
-      activesupport (= 6.1.3.2)
-    activestorage (6.1.3.2)
-      actionpack (= 6.1.3.2)
-      activejob (= 6.1.3.2)
-      activerecord (= 6.1.3.2)
-      activesupport (= 6.1.3.2)
+    activemodel (6.1.4)
+      activesupport (= 6.1.4)
+    activerecord (6.1.4)
+      activemodel (= 6.1.4)
+      activesupport (= 6.1.4)
+    activestorage (6.1.4)
+      actionpack (= 6.1.4)
+      activejob (= 6.1.4)
+      activerecord (= 6.1.4)
+      activesupport (= 6.1.4)
       marcel (~> 1.0.0)
-      mini_mime (~> 1.0.2)
-    activesupport (6.1.3.2)
+      mini_mime (>= 1.1.0)
+    activesupport (6.1.4)
       concurrent-ruby (~> 1.0, >= 1.0.2)
       i18n (>= 1.6, < 2)
       minitest (>= 5.1)
@@ -132,7 +125,6 @@ GEM
       device_detector
       geocoder (>= 1.4.5)
       safely_block (>= 0.2.1)
-    american_date (1.1.1)
     android_key_attestation (0.3.0)
     ast (2.4.2)
     autoprefixer-rails (10.2.5.1)
@@ -169,13 +161,13 @@ GEM
       aws-sigv4 (~> 1.1)
     aws-sigv4 (1.2.2)
       aws-eventstream (~> 1, >= 1.0.2)
-    axe-core-api (4.2.0)
+    axe-core-api (4.2.1)
       capybara
       dumb_delegator
       selenium-webdriver
       virtus
       watir
-    axe-core-rspec (4.2.0)
+    axe-core-rspec (4.2.1)
       axe-core-api
       dumb_delegator
       virtus
@@ -198,7 +190,7 @@ GEM
       html_tokenizer (~> 0.0.6)
       parser (>= 2.4)
       smart_properties
-    bindata (2.4.9)
+    bindata (2.4.10)
     binding_of_caller (0.8.0)
       debug_inspector (>= 0.0.1)
     blueprinter (0.25.3)
@@ -276,7 +268,6 @@ GEM
       htmlentities (~> 4.3.3)
       launchy (~> 2.1)
       mail (~> 2.7)
-    equalizer (0.0.11)
     erb_lint (0.0.37)
       activesupport
       better_html (~> 1.0.7)
@@ -301,7 +292,7 @@ GEM
     faraday (1.1.0)
       multipart-post (>= 1.2, < 3)
       ruby2_keywords
-    ffi (1.15.1)
+    ffi (1.15.3)
     ffi-compiler (1.0.1)
       ffi (>= 1.0.0)
       rake
@@ -354,8 +345,8 @@ GEM
       terminal-table (>= 1.5.1)
     ice_nine (0.11.2)
     io-console (0.5.9)
-    irb (1.3.5)
-      reline (>= 0.1.5)
+    irb (1.3.6)
+      reline (>= 0.2.5)
     jmespath (1.4.0)
     jwt (2.2.3)
     knapsack (1.22.0)
@@ -384,7 +375,7 @@ GEM
     memory_profiler (0.9.14)
     method_source (1.0.0)
     mini_histogram (0.3.1)
-    mini_mime (1.0.3)
+    mini_mime (1.1.0)
     mini_portile2 (2.5.3)
     minitest (5.14.4)
     msgpack (1.4.2)
@@ -415,7 +406,7 @@ GEM
     parser (3.0.1.1)
       ast (~> 2.4.1)
     pg (1.2.3)
-    phonelib (0.6.50)
+    phonelib (0.6.51)
     pkcs11 (0.3.3)
     premailer (1.15.0)
       addressable
@@ -447,7 +438,7 @@ GEM
     rack-cors (1.1.1)
       rack (>= 2.0.0)
     rack-headers_filter (0.0.1)
-    rack-mini-profiler (2.3.1)
+    rack-mini-profiler (2.3.2)
       rack (>= 1.2.0)
     rack-proxy (0.7.0)
       rack
@@ -457,20 +448,20 @@ GEM
     rack_session_access (0.2.0)
       builder (>= 2.0.0)
       rack (>= 1.0.0)
-    rails (6.1.3.2)
-      actioncable (= 6.1.3.2)
-      actionmailbox (= 6.1.3.2)
-      actionmailer (= 6.1.3.2)
-      actionpack (= 6.1.3.2)
-      actiontext (= 6.1.3.2)
-      actionview (= 6.1.3.2)
-      activejob (= 6.1.3.2)
-      activemodel (= 6.1.3.2)
-      activerecord (= 6.1.3.2)
-      activestorage (= 6.1.3.2)
-      activesupport (= 6.1.3.2)
+    rails (6.1.4)
+      actioncable (= 6.1.4)
+      actionmailbox (= 6.1.4)
+      actionmailer (= 6.1.4)
+      actionpack (= 6.1.4)
+      actiontext (= 6.1.4)
+      actionview (= 6.1.4)
+      activejob (= 6.1.4)
+      activemodel (= 6.1.4)
+      activerecord (= 6.1.4)
+      activestorage (= 6.1.4)
+      activesupport (= 6.1.4)
       bundler (>= 1.15.0)
-      railties (= 6.1.3.2)
+      railties (= 6.1.4)
       sprockets-rails (>= 2.0.0)
     rails-controller-testing (1.0.5)
       actionpack (>= 5.0.1.rc1)
@@ -489,11 +480,11 @@ GEM
     rails-i18n (6.0.0)
       i18n (>= 0.7, < 2)
       railties (>= 6.0.0, < 7)
-    railties (6.1.3.2)
-      actionpack (= 6.1.3.2)
-      activesupport (= 6.1.3.2)
+    railties (6.1.4)
+      actionpack (= 6.1.4)
+      activesupport (= 6.1.4)
       method_source
-      rake (>= 0.8.7)
+      rake (>= 0.13)
       thor (~> 1.0)
     rainbow (3.0.0)
     raise-if-root (0.0.2)
@@ -547,17 +538,20 @@ GEM
     rspec-retry (0.6.2)
       rspec-core (> 3.3)
     rspec-support (3.10.2)
-    rubocop (1.11.0)
+    rubocop (1.18.2)
       parallel (~> 1.10)
       parser (>= 3.0.0.0)
       rainbow (>= 2.2.2, < 4.0)
       regexp_parser (>= 1.8, < 3.0)
       rexml
-      rubocop-ast (>= 1.2.0, < 2.0)
+      rubocop-ast (>= 1.7.0, < 2.0)
       ruby-progressbar (~> 1.7)
       unicode-display_width (>= 1.4.0, < 3.0)
-    rubocop-ast (1.4.1)
-      parser (>= 2.7.1.5)
+    rubocop-ast (1.7.0)
+      parser (>= 3.0.1.1)
+    rubocop-performance (1.11.3)
+      rubocop (>= 1.7.0, < 2.0)
+      rubocop-ast (>= 0.4.0)
     rubocop-rails (2.5.2)
       activesupport
       rack (>= 1.1)
@@ -570,7 +564,7 @@ GEM
       rexml
     ruby-statistics (2.1.3)
     ruby2_keywords (0.0.2)
-    rubyzip (1.3.0)
+    rubyzip (2.3.0)
     safe_target_blank (1.0.2)
       rails
     safely_block (0.3.0)
@@ -642,11 +636,10 @@ GEM
     valid_email (0.1.3)
       activemodel
       mail (>= 2.6.1)
-    virtus (1.0.5)
+    virtus (2.0.0)
       axiom-types (~> 0.1)
       coercible (~> 1.0)
       descendants_tracker (~> 0.0, >= 0.0.3)
-      equalizer (~> 0.0, >= 0.0.9)
     warden (1.2.9)
       rack (>= 2.0.9)
     watir (6.19.1)
@@ -662,7 +655,7 @@ GEM
       safety_net_attestation (~> 0.4.0)
       securecompare (~> 1.0)
       tpm-key_attestation (~> 0.10.0)
-    webdrivers (4.4.1)
+    webdrivers (4.6.0)
       nokogiri (~> 1.6)
       rubyzip (>= 1.3.0)
       selenium-webdriver (>= 3.0, < 4.0)
@@ -675,7 +668,7 @@ GEM
       rack-proxy (>= 0.6.1)
       railties (>= 5.2)
       semantic_range (>= 2.3.0)
-    websocket-driver (0.7.3)
+    websocket-driver (0.7.5)
       websocket-extensions (>= 0.1.0)
     websocket-extensions (0.1.5)
     xmldsig (0.6.6)
@@ -692,15 +685,13 @@ GEM
     yard (0.9.26)
     zeitwerk (2.4.2)
     zonebie (0.6.1)
-    zxcvbn-js (4.4.3)
-      execjs
+    zxcvbn (0.1.7)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
   ahoy_matey (~> 3.0)
-  american_date
   autoprefixer-rails (~> 10.0)
   aws-sdk-cloudwatchlogs
   aws-sdk-eventbridge
@@ -754,7 +745,6 @@ DEPENDENCIES
   phonelib
   premailer-rails (>= 1.11.1)
   profanity_filter
-  proofer!
   pry-byebug
   pry-doc
   pry-rails
@@ -767,7 +757,7 @@ DEPENDENCIES
   rack-test (>= 1.1.0)
   rack-timeout
   rack_session_access (>= 0.2.0)
-  rails (~> 6.1.3)
+  rails (~> 6.1.4)
   rails-controller-testing (>= 1.0.4)
   rails-erd (>= 1.6.0)
   raise-if-root
@@ -779,7 +769,8 @@ DEPENDENCIES
   rqrcode
   rspec-rails (~> 4.0)
   rspec-retry
-  rubocop (~> 1.11.0)
+  rubocop (~> 1.18.2)
+  rubocop-performance (~> 1.11.2)
   rubocop-rails (>= 2.5.2)
   ruby-progressbar
   ruby-saml
@@ -805,10 +796,10 @@ DEPENDENCIES
   xmldsig (~> 0.6)
   xmlenc (~> 0.7, >= 0.7.1)
   zonebie
-  zxcvbn-js
+  zxcvbn (= 0.1.7)
 
 RUBY VERSION
-   ruby 2.6.5p114
+   ruby 2.7.3p183
 
 BUNDLED WITH
-   1.17.3
+   2.2.20

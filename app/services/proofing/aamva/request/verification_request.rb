@@ -39,7 +39,7 @@ module Proofing
           end
         rescue Faraday::TimeoutError, Faraday::ConnectionFailed => err
           message = "AAMVA raised #{err.class} waiting for verification response: #{err.message}"
-          raise ::Proofer::TimeoutError, message
+          raise ::Proofing::TimeoutError, message
         end
 
         def verification_url
@@ -125,10 +125,6 @@ module Proofing
           }
         end
         # rubocop:enable Metrics/MethodLength, Metrics/AbcSize
-
-        def uuid
-          SecureRandom.uuid
-        end
 
         def timeout
           (config.verification_request_timeout || 5).to_i

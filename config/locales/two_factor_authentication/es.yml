@@ -148,8 +148,10 @@ es:
       backup_code_info_html: Le daremos 10 códigos para usar y guardar en un lugar
         seguro. Puede usar códigos de respaldo como su único método de
         autenticación.
-      less_secure_label: Menos seguridad
-      more_secure_label: Más seguridad
+      least_secure_label: Lo menos seguro
+      less_secure_label: Menos seguro
+      more_secure_label: Más seguro
+      most_secure_label: Lo más seguro
       phone: Teléfono
       phone_info_html: Obtenga códigos de seguridad por mensaje de texto (SMS) o
         llamada telefónica.
@@ -174,6 +176,7 @@ es:
       question: '¿No dispone de su llave de seguridad?'
     webauthn_header_text: Conecte su llave de seguridad
     webauthn_piv_available: Utilice su PIV o CAC
+    webauthn_use_key: Usar llave de seguridad
     webauthn_verified:
       header: Llave de seguridad verificada
       info: Hemos verificado su llave de seguridad. Haga clic en continuar para

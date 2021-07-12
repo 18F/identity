@@ -12,9 +12,10 @@ executors:
   ruby_browsers:
     docker:
       # Specify the Ruby version you desire here
-      - image: circleci/ruby:2.6.6-node-browsers
+      - image: circleci/ruby:2.7.3-node-browsers
         environment:
           RAILS_ENV: test
+          BUNDLER_VERSION: 2.2.20
 
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
@@ -28,6 +29,7 @@ executors:
 commands:
   bundle-yarn-install:
     steps:
+      - run: gem install bundler --version $BUNDLER_VERSION
       - restore_cache:
           keys:
             - v2-identity-idp-bundle-{{ checksum "Gemfile.lock" }}
@@ -114,6 +116,23 @@ commands:
           destination: capybara
 
 jobs:
+  setup:
+    working_directory: ~/identity-idp
+    executor: ruby_browsers
+    steps:
+      - checkout
+      - bundle-yarn-install
+      - run:
+          name: Test Setup
+          command: |
+            bundle exec rake assets:precompile
+      - persist_to_workspace:
+          root: .
+          paths:
+            - public/assets
+            - public/packs
+            - public/packs-test
+
   build:
     executor: ruby_browsers
 
@@ -161,16 +180,16 @@ jobs:
             cp pwned_passwords/pwned_passwords.txt.sample pwned_passwords/pwned_passwords.txt
             bundle exec rake db:create db:migrate --trace
             bundle exec rake db:seed
-            bundle exec rake assets:precompile
+            ruby -i -pe 'gsub(/^(\s+)compile: true$/, "\\1compile: false")' config/webpacker.yml
+      - attach_workspace:
+          at: .
       - run:
           name: Run Tests
           command: |
             mkdir /tmp/test-results
             ./cc-test-reporter before-build
-            bin/rails zeitwerk:check
 
             bundle exec rake knapsack:rspec
-            yarn test
       - run:
           name: Code Climate Test Coverage
           command: |
@@ -186,6 +205,17 @@ jobs:
           command: |
             aws s3 sync "s3://login-gov-test-coverage/coverage/$CIRCLE_BUILD_NUM" coverage/
             ./cc-test-reporter sum-coverage --output - --parts $CIRCLE_NODE_TOTAL coverage/codeclimate.*.json | ./cc-test-reporter upload-coverage --input -
+  javascript_build:
+    working_directory: ~/identity-idp
+    executor: ruby_browsers
+    steps:
+      - checkout
+      - bundle-yarn-install
+      - run:
+          name: Run Tests
+          command: |
+            yarn test
+
   lints:
     working_directory: ~/identity-idp
     executor: ruby_browsers
@@ -199,7 +229,8 @@ jobs:
             make lint_yaml
             yarn run lint
             yarn run typecheck
-            bundle exec rubocop
+            bundle exec rubocop --parallel
+            bin/rails zeitwerk:check
             make lint_erb
             make check_asset_strings
             make lint_optimized_assets
@@ -266,12 +297,44 @@ jobs:
             bin/smoke_test --remote --no-source-env
       - notify-slack-smoke-test-status
       - store-smoketest-results
+  check-pinpoint-config:
+    executor: ruby_browsers
+    steps:
+      - checkout
+      - bundle-yarn-install
+      - run:
+          name: Check current AWS Pinpoint country support
+          command: |-
+            make lint_country_dialing_codes
+      - slack/status:
+          fail_only: true
+          failure_message: ":aws-emoji: :red_circle: AWS Pinpoint country configuration is out of date"
 workflows:
   version: 2
   release:
     jobs:
-      - build
-      - lints
+      - setup
+      - build:
+          requires:
+            - setup
+      - javascript_build:
+          requires:
+            - setup
+      - lints:
+          requires:
+            - setup
+
+  daily-external-pinpoint-checker:
+    jobs:
+      - check-pinpoint-config
+    triggers:
+      - schedule:
+          # Once a day at 12pm
+          cron: "0 12 * * *"
+          filters:
+            branches:
+              only:
+                - main
 
   # Theses are staggered separately from the smoke tests in the identity-monitor repo
   # because they share credentials and would mess each other up if run concurrently

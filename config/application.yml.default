@@ -48,6 +48,7 @@ aws_region: 'us-west-2'
 aws_kms_multi_region_enabled: 'false'
 backup_code_cost: '2000$8$1$'
 backup_code_skip_symmetric_encryption: 'false'
+dob_international_format_opt_out_list: '[]'
 doc_auth_error_dpi_threshold: '290'
 doc_auth_error_sharpness_threshold: '40'
 doc_auth_error_glare_threshold: '40'
@@ -59,7 +60,12 @@ disable_email_sending: 'true'
 disallow_all_web_crawlers: 'true'
 doc_auth_extend_timeout_by_minutes: '40'
 doc_capture_polling_enabled: 'true'
+doc_auth_client_glare_threshold: '0'
+doc_auth_client_sharpness_threshold: '30'
 doc_auth_enable_presigned_s3_urls: 'false'
+doc_auth_error_dpi_threshold: '290'
+doc_auth_error_glare_threshold: '40'
+doc_auth_error_sharpness_threshold: '40'
 doc_capture_request_valid_for_minutes: '15'
 email_from: no-reply@login.gov
 email_from_display_name: Login.gov
@@ -162,6 +168,7 @@ reset_password_email_window_in_minutes: '60'
 risc_notifications_local_enabled: 'false'
 risc_notifications_eventbridge_enabled: 'false'
 ruby_workers_enabled: 'true'
+rules_of_use_updated_at: '2021-05-21T00:00:00Z'
 s3_reports_enabled: 'false'
 saml_secret_rotation_enabled: 'false'
 service_provider_request_ttl_hours: '24'
@@ -216,7 +223,6 @@ development:
   hmac_fingerprinter_key: a2c813d4dca919340866ba58063e4072adc459b767a74cf2666d5c1eef3861db26708e7437abde1755eb24f4034386b0fea1850a1cb7e56bff8fae3cc6ade96c
   hmac_fingerprinter_key_queue: '["11111111111111111111111111111111", "22222222222222222222222222222222"]'
   identity_pki_local_dev: 'true'
-  issuers_with_email_nameid_format: ''
   liveness_checking_enabled: 'true'
   logins_per_ip_limit: '5'
   logo_upload_enabled: 'true'
@@ -273,7 +279,6 @@ production:
   enable_usps_verification: 'false'
   hmac_fingerprinter_key:
   hmac_fingerprinter_key_queue: '[]'
-  issuers_with_email_nameid_format: sp1,sp2
   logins_per_ip_limit: '20'
   logins_per_ip_period: '20'
   logins_per_ip_track_only_mode: 'true'
@@ -334,7 +339,6 @@ test:
   hmac_fingerprinter_key: a2c813d4dca919340866ba58063e4072adc459b767a74cf2666d5c1eef3861db26708e7437abde1755eb24f4034386b0fea1850a1cb7e56bff8fae3cc6ade96c
   hmac_fingerprinter_key_queue: '["old-key-one", "old-key-two"]'
   identity_pki_disabled: 'true'
-  issuers_with_email_nameid_format: https://rp1.serviceprovider.com/auth/saml/metadata
   lexisnexis_trueid_account_id: 'test_account'
   lockout_period_in_minutes: '5'
   logins_per_email_and_ip_limit: '2'

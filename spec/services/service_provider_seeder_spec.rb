@@ -24,7 +24,7 @@ RSpec.describe ServiceProviderSeeder do
 
       run
 
-      sp = ServiceProvider.from_issuer('http://localhost:3000')
+      sp = ServiceProvider.find_by(issuer: 'http://localhost:3000')
       expect(sp.certs).to eq(pems)
     end
 
@@ -34,7 +34,7 @@ RSpec.describe ServiceProviderSeeder do
       it 'sets approved, active and native on service providers from the yaml' do
         run
 
-        config_sp = ServiceProvider.from_issuer('http://test.host')
+        config_sp = ServiceProvider.find_by(issuer: 'http://test.host')
         expect(config_sp.approved).to eq(true)
         expect(config_sp.active).to eq(true)
         expect(config_sp.native).to eq(true)
@@ -61,13 +61,18 @@ RSpec.describe ServiceProviderSeeder do
           :service_provider,
           issuer: 'http://test.host',
           acs_url: 'http://test.host/test/saml/decode_assertion_old',
+          certs: ['a', 'b'],
         )
       end
 
       it 'updates the attributes based on the current value of the yml file' do
-        expect { run }.
-          to change { ServiceProvider.from_issuer('http://test.host').acs_url }.
-          to('http://test.host/test/saml/decode_assertion')
+        expect { run }.to(
+          change { ServiceProvider.find_by(issuer: 'http://test.host').acs_url }.
+            to('http://test.host/test/saml/decode_assertion').and(
+              change { ServiceProvider.find_by(issuer: 'http://test.host').certs }.
+                to([Rails.root.join('certs', 'sp', 'saml_test_sp.crt').read]),
+            ),
+        )
       end
     end
 

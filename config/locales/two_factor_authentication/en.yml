@@ -137,8 +137,10 @@ en:
       backup_code_info_html: We’ll give you 10 codes. You can use backup codes as your
         only authentication method, but it is the least recommended method since
         notes can get lost. Keep them in a safe place.
+      least_secure_label: Least secure
       less_secure_label: Less secure
       more_secure_label: More Secure
+      most_secure_label: Most Secure
       phone: Phone
       phone_info_html: Get security codes by text message (SMS) or phone call.
       phone_info_no_voip: Please do not use web-based (VOIP) phone services.
@@ -162,6 +164,7 @@ en:
       question: Don’t have your security key available?
     webauthn_header_text: Connect your security key
     webauthn_piv_available: Use your PIV or CAC
+    webauthn_use_key: Use security key
     webauthn_verified:
       header: Security key verified
       info: We have verified your security key. Click continue to sign in.

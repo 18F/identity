@@ -3,8 +3,7 @@ import { fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { waitFor, waitForElementToBeRemoved } from '@testing-library/dom';
 import AcuantCapture, {
-  ACCEPTABLE_GLARE_SCORE,
-  ACCEPTABLE_SHARPNESS_SCORE,
+  isAcuantCameraAccessFailure,
   getNormalizedAcuantCaptureFailureMessage,
 } from '@18f/identity-document-capture/components/acuant-capture';
 import { AcuantContextProvider, AnalyticsContext } from '@18f/identity-document-capture';
@@ -25,16 +24,6 @@ const ACUANT_CAPTURE_SUCCESS_RESULT = {
   moireraw: 99,
   glare: 100,
   sharpness: 100,
-};
-
-const ACUANT_CAPTURE_GLARE_RESULT = {
-  ...ACUANT_CAPTURE_SUCCESS_RESULT,
-  glare: ACCEPTABLE_GLARE_SCORE - 1,
-};
-
-const ACUANT_CAPTURE_BLURRY_RESULT = {
-  ...ACUANT_CAPTURE_SUCCESS_RESULT,
-  sharpness: ACCEPTABLE_SHARPNESS_SCORE - 1,
 };
 
 describe('document-capture/components/acuant-capture', () => {
@@ -61,6 +50,16 @@ describe('document-capture/components/acuant-capture', () => {
 
         expect(message).to.be.a('string');
       });
+    });
+  });
+
+  describe('isAcuantCameraAccessFailure', () => {
+    it('returns false if not a camera access failure', () => {
+      expect(isAcuantCameraAccessFailure('Camera not supported.')).to.be.false();
+    });
+
+    it('returns true if a camera access failure', () => {
+      expect(isAcuantCameraAccessFailure(new Error())).to.be.true();
     });
   });
 
@@ -188,19 +187,86 @@ describe('document-capture/components/acuant-capture', () => {
       );
 
       initialize({
-        start: sinon.stub().callsArgWithAsync(1, new Error()),
+        start: sinon.stub().callsArgWithAsync(1, 'Camera not supported.'),
       });
 
       const button = getByLabelText('Image');
-      fireEvent.click(button);
+      userEvent.click(button);
 
       await findByText('doc_auth.errors.camera.failed');
       expect(window.AcuantCameraUI.end).to.have.been.calledOnce();
       expect(container.querySelector('.full-screen')).to.be.null();
       expect(addPageAction).to.have.been.calledWith({
         label: 'IdV: Image capture failed',
+        payload: { field: 'test', error: 'Camera not supported' },
+      });
+      expect(document.activeElement).to.equal(button);
+    });
+
+    it('calls onCameraAccessDeclined if camera access is declined', async () => {
+      const addPageAction = sinon.spy();
+      const onCameraAccessDeclined = sinon.stub();
+      const { container, getByLabelText } = render(
+        <AnalyticsContext.Provider value={{ addPageAction }}>
+          <DeviceContext.Provider value={{ isMobile: true }}>
+            <AcuantContextProvider sdkSrc="about:blank">
+              <AcuantCapture
+                label="Image"
+                name="test"
+                onCameraAccessDeclined={onCameraAccessDeclined}
+              />
+            </AcuantContextProvider>
+          </DeviceContext.Provider>
+        </AnalyticsContext.Provider>,
+      );
+
+      initialize({
+        start: sinon.stub().callsArgWithAsync(1, new Error()),
+      });
+
+      const button = getByLabelText('Image');
+      userEvent.click(button);
+
+      await Promise.all([
+        expect(onCameraAccessDeclined).to.eventually.be.called(),
+        expect(window.AcuantCameraUI.end).to.eventually.be.called(),
+      ]);
+      expect(container.querySelector('.full-screen')).to.be.null();
+      expect(addPageAction).to.have.been.calledWith({
+        label: 'IdV: Image capture failed',
         payload: { field: 'test', error: 'User or system denied camera access' },
       });
+      expect(document.activeElement).to.equal(button);
+    });
+
+    it('blocks focus trap default focus return behavior if focus transitions during error', async () => {
+      let outsideInput;
+      const onCameraAccessDeclined = sinon.stub().callsFake(() => {
+        outsideInput.focus();
+      });
+      const { container, getByLabelText, getByTestId } = render(
+        <DeviceContext.Provider value={{ isMobile: true }}>
+          <AcuantContextProvider sdkSrc="about:blank">
+            <input data-testid="outside-input" />
+            <AcuantCapture
+              label="Image"
+              name="test"
+              onCameraAccessDeclined={onCameraAccessDeclined}
+            />
+          </AcuantContextProvider>
+        </DeviceContext.Provider>,
+      );
+      outsideInput = getByTestId('outside-input');
+
+      initialize({
+        start: sinon.stub().callsArgWithAsync(1, new Error()),
+      });
+
+      const button = getByLabelText('Image');
+      userEvent.click(button);
+
+      await waitFor(() => !container.querySelector('.full-screen'));
+      expect(document.activeElement).to.equal(outsideInput);
     });
 
     it('calls onChange with the captured image on successful capture', async () => {
@@ -224,9 +290,8 @@ describe('document-capture/components/acuant-capture', () => {
 
       const button = getByText('doc_auth.buttons.take_picture');
       fireEvent.click(button);
-      await new Promise((resolve) => onChange.callsFake(resolve));
 
-      expect(onChange).to.have.been.calledWith(
+      await expect(onChange).to.eventually.be.calledWith(
         'data:image/png,',
         sinon.match({
           assessment: 'success',
@@ -245,7 +310,7 @@ describe('document-capture/components/acuant-capture', () => {
           width: sinon.match.number,
         }),
       );
-      expect(window.AcuantCameraUI.end).to.have.been.calledOnce();
+      await expect(window.AcuantCameraUI.end).to.eventually.be.called();
     });
 
     it('ends the capture when the component unmounts', () => {
@@ -325,7 +390,7 @@ describe('document-capture/components/acuant-capture', () => {
       const { getByText, findByText } = render(
         <AnalyticsContext.Provider value={{ addPageAction }}>
           <DeviceContext.Provider value={{ isMobile: true }}>
-            <AcuantContextProvider sdkSrc="about:blank">
+            <AcuantContextProvider sdkSrc="about:blank" glareThreshold={50}>
               <AcuantCapture label="Image" name="test" />
             </AcuantContextProvider>
           </DeviceContext.Provider>
@@ -337,7 +402,10 @@ describe('document-capture/components/acuant-capture', () => {
           await Promise.resolve();
           callbacks.onCaptured();
           await Promise.resolve();
-          callbacks.onCropped(ACUANT_CAPTURE_GLARE_RESULT);
+          callbacks.onCropped({
+            ...ACUANT_CAPTURE_SUCCESS_RESULT,
+            glare: 49,
+          });
         }),
       });
 
@@ -354,10 +422,10 @@ describe('document-capture/components/acuant-capture', () => {
           source: 'acuant',
           dpi: 519,
           moire: 99,
-          glare: ACCEPTABLE_GLARE_SCORE - 1,
+          glare: 49,
           height: 1104,
-          sharpnessScoreThreshold: ACCEPTABLE_SHARPNESS_SCORE,
-          glareScoreThreshold: ACCEPTABLE_GLARE_SCORE,
+          sharpnessScoreThreshold: sinon.match.number,
+          glareScoreThreshold: 50,
           isAssessedAsBlurry: false,
           isAssessedAsGlare: true,
           assessment: 'glare',
@@ -374,7 +442,7 @@ describe('document-capture/components/acuant-capture', () => {
       const { getByText, findByText } = render(
         <AnalyticsContext.Provider value={{ addPageAction }}>
           <DeviceContext.Provider value={{ isMobile: true }}>
-            <AcuantContextProvider sdkSrc="about:blank">
+            <AcuantContextProvider sdkSrc="about:blank" sharpnessThreshold={50}>
               <AcuantCapture label="Image" name="test" />
             </AcuantContextProvider>
           </DeviceContext.Provider>
@@ -386,7 +454,10 @@ describe('document-capture/components/acuant-capture', () => {
           await Promise.resolve();
           callbacks.onCaptured();
           await Promise.resolve();
-          callbacks.onCropped(ACUANT_CAPTURE_BLURRY_RESULT);
+          callbacks.onCropped({
+            ...ACUANT_CAPTURE_SUCCESS_RESULT,
+            sharpness: 49,
+          });
         }),
       });
 
@@ -405,12 +476,12 @@ describe('document-capture/components/acuant-capture', () => {
           moire: 99,
           glare: 100,
           height: 1104,
-          sharpnessScoreThreshold: ACCEPTABLE_SHARPNESS_SCORE,
-          glareScoreThreshold: ACCEPTABLE_GLARE_SCORE,
+          sharpnessScoreThreshold: 50,
+          glareScoreThreshold: sinon.match.number,
           isAssessedAsBlurry: true,
           isAssessedAsGlare: false,
           assessment: 'blurry',
-          sharpness: ACCEPTABLE_SHARPNESS_SCORE - 1,
+          sharpness: 49,
           width: 1748,
         },
       });
@@ -421,7 +492,7 @@ describe('document-capture/components/acuant-capture', () => {
     it('shows at most one error message between AcuantCapture and FileInput', async () => {
       const { getByLabelText, getByText, findByText } = render(
         <DeviceContext.Provider value={{ isMobile: true }}>
-          <AcuantContextProvider sdkSrc="about:blank">
+          <AcuantContextProvider sdkSrc="about:blank" sharpnessThreshold={50}>
             <AcuantCapture label="Image" />
           </AcuantContextProvider>
         </DeviceContext.Provider>,
@@ -433,7 +504,10 @@ describe('document-capture/components/acuant-capture', () => {
           await Promise.resolve();
           callbacks.onCaptured();
           await Promise.resolve();
-          callbacks.onCropped(ACUANT_CAPTURE_BLURRY_RESULT);
+          callbacks.onCropped({
+            ...ACUANT_CAPTURE_SUCCESS_RESULT,
+            sharpness: 49,
+          });
         }),
       });
 
@@ -456,7 +530,7 @@ describe('document-capture/components/acuant-capture', () => {
       const { getByText, findByText } = render(
         <AnalyticsContext.Provider value={{ addPageAction }}>
           <DeviceContext.Provider value={{ isMobile: true }}>
-            <AcuantContextProvider sdkSrc="about:blank">
+            <AcuantContextProvider sdkSrc="about:blank" sharpnessThreshold={50}>
               <AcuantCapture label="Image" name="test" />
             </AcuantContextProvider>
           </DeviceContext.Provider>
@@ -471,7 +545,10 @@ describe('document-capture/components/acuant-capture', () => {
             await Promise.resolve();
             callbacks.onCaptured();
             await Promise.resolve();
-            callbacks.onCropped(ACUANT_CAPTURE_BLURRY_RESULT);
+            callbacks.onCropped({
+              ...ACUANT_CAPTURE_SUCCESS_RESULT,
+              sharpness: 49,
+            });
           })
           .onSecondCall()
           .callsFake(async (callbacks) => {
@@ -500,12 +577,12 @@ describe('document-capture/components/acuant-capture', () => {
           moire: 99,
           glare: 100,
           height: 1104,
-          sharpnessScoreThreshold: ACCEPTABLE_SHARPNESS_SCORE,
-          glareScoreThreshold: ACCEPTABLE_GLARE_SCORE,
+          sharpnessScoreThreshold: 50,
+          glareScoreThreshold: sinon.match.number,
           isAssessedAsBlurry: true,
           isAssessedAsGlare: false,
           assessment: 'blurry',
-          sharpness: ACCEPTABLE_SHARPNESS_SCORE - 1,
+          sharpness: 49,
           width: 1748,
         },
       });
@@ -758,8 +835,10 @@ describe('document-capture/components/acuant-capture', () => {
 
     const placeholder = getByLabelText('Image');
     userEvent.click(placeholder);
+    userEvent.click(getByLabelText('users.personal_key.close'));
     const button = getByText('doc_auth.buttons.take_picture');
     userEvent.click(button);
+    userEvent.click(getByLabelText('users.personal_key.close'));
     const upload = getByText('Upload');
     fireEvent.click(upload);
 

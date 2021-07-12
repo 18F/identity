@@ -11,6 +11,9 @@ class SamlIdpController < ApplicationController
   include VerifyProfileConcern
   include AuthorizationCountConcern
 
+  prepend_before_action :skip_session_load, only: :metadata
+  prepend_before_action :skip_session_expiration, only: :metadata
+
   skip_before_action :verify_authenticity_token
   before_action :confirm_user_is_authenticated_with_fresh_mfa, only: :auth
   before_action :bump_auth_count, only: [:auth]
@@ -82,10 +85,10 @@ class SamlIdpController < ApplicationController
   end
 
   def render_template_for(message, action_url, type)
-    domain = SecureHeadersWhitelister.extract_domain(action_url)
+    domain = SecureHeadersAllowList.extract_domain(action_url)
 
     # Returns fully formed CSP array w/"'self'", domain, and ServiceProvider#redirect_uris
-    csp_uris = SecureHeadersWhitelister.csp_with_sp_redirect_uris(
+    csp_uris = SecureHeadersAllowList.csp_with_sp_redirect_uris(
       domain, decorated_session.sp_redirect_uris
     )
     override_content_security_policy_directives(form_action: csp_uris)

@@ -66,7 +66,7 @@ module Idv
     def non_address_pii
       pii_to_h.
         slice('first_name', 'middle_name', 'last_name', 'dob', 'phone', 'ssn').
-        merge(uuid_prefix: ServiceProvider.from_issuer(sp_session[:issuer]).app_id)
+        merge(uuid_prefix: ServiceProvider.find_by(issuer: sp_session[:issuer])&.app_id)
     end
 
     def pii_to_h
@@ -80,14 +80,14 @@ module Idv
     end
 
     def idv_session_settings(hash)
-      { 'vendor_phone_confirmation': false,
-        'user_phone_confirmation': false,
-        'resolution_successful': 'phone',
-        'address_verification_mechanism': 'gpo',
-        'profile_confirmation': true,
-        'params': hash,
-        'applicant': hash,
-        'uuid': current_user.uuid }
+      { vendor_phone_confirmation: false,
+        user_phone_confirmation: false,
+        resolution_successful: 'phone',
+        address_verification_mechanism: 'gpo',
+        profile_confirmation: true,
+        params: hash,
+        applicant: hash,
+        uuid: current_user.uuid }
     end
 
     def confirm_mail_not_spammed

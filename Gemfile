@@ -1,16 +1,15 @@
 source 'https://rubygems.org'
 git_source(:github) { |repo_name| "https://github.com/#{repo_name}.git" }
 
-ruby '~> 2.6.5'
+ruby '~> 2.7.3'
 
-gem 'rails', '~> 6.1.3'
+gem 'rails', '~> 6.1.4'
 
 # Variables can be overridden for local dev in Gemfile-dev
-@doc_auth_gem ||= { github: '18F/identity-doc-auth', tag: 'v0.9.3' }
-@hostdata_gem ||= { github: '18F/identity-hostdata', tag: 'v3.2.0' }
+@doc_auth_gem ||= { github: '18F/identity-doc-auth', tag: 'v0.10.1' }
+@hostdata_gem ||= { github: '18F/identity-hostdata', tag: 'v3.3.0' }
 @logging_gem ||= { github: '18F/identity-logging', tag: 'v0.1.0' }
-@proofer_gem ||= { github: '18F/identity-proofer-gem', ref: 'v2.8.0' }
-@saml_gem ||= { github: '18F/saml_idp', tag: 'v0.14.1-18f' }
+@saml_gem ||= { github: '18F/saml_idp', tag: 'v0.14.2-18f' }
 @telephony_gem ||= { github: '18f/identity-telephony', tag: 'v0.3.0' }
 @validations_gem ||= { github: '18F/identity-validations', tag: 'v0.6.0' }
 
@@ -19,11 +18,9 @@ gem 'identity-hostdata', @hostdata_gem
 gem 'identity-logging', @logging_gem
 gem 'identity-telephony', @telephony_gem
 gem 'identity_validations', @validations_gem
-gem 'proofer', @proofer_gem
 gem 'saml_idp', @saml_gem
 
 gem 'ahoy_matey', '~> 3.0'
-gem 'american_date'
 gem 'autoprefixer-rails', '~> 10.0'
 gem 'aws-sdk-kms', '~> 1.4'
 gem 'aws-sdk-ses', '~> 1.6'
@@ -78,7 +75,10 @@ gem 'webauthn', '~> 2.1'
 gem 'webpacker', '~> 5.1'
 gem 'xmldsig', '~> 0.6'
 gem 'xmlenc', '~> 0.7', '>= 0.7.1'
-gem 'zxcvbn-js'
+
+# This version of the zxcvbn gem matches the data and behavior of the zxcvbn NPM package.
+# It should not be updated without verifying that the behavior still matches JS version 4.4.2.
+gem 'zxcvbn', '0.1.7'
 
 group :development do
   gem 'better_errors', '>= 2.5.1'
@@ -107,7 +107,8 @@ group :development, :test do
   gem 'psych'
   gem 'puma'
   gem 'rspec-rails', '~> 4.0'
-  gem 'rubocop', '~> 1.11.0', require: false
+  gem 'rubocop', '~> 1.18.2', require: false
+  gem 'rubocop-performance', '~> 1.11.2', require: false
   gem 'rubocop-rails', '>= 2.5.2', require: false
 end
 
